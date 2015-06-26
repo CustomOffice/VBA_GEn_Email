@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Vba gen email : Macro pour générer un email avec outlook en 3 partie, un texte (intro), un tableau et un texte (signature)">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Vba gen email</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/CustomOffice/VBA_Gen_Email">View on GitHub</a>
+
+          <h1 id="project_title">Vba gen email</h1>
+          <h2 id="project_tagline">Macro pour générer un email avec outlook en 3 partie, un texte (intro), un tableau et un texte (signature)</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/CustomOffice/VBA_Gen_Email/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/CustomOffice/VBA_Gen_Email/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="vba_gen_email" class="anchor" href="#vba_gen_email" aria-hidden="true"><span class="octicon octicon-link"></span></a>VBA_Gen_Email</h1>
+
+<p>Macro pour générer un email avec outlook en 3 partie, un texte (intro), un tableau et un texte (signature)</p>
+
+<h2>
+<a id="instruction" class="anchor" href="#instruction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Instruction</h2>
+
+<ul>
+<li>Soit créer un module dans votre projet vba et y copier/coller le code ci-dessous</li>
+<li>Soit télécharger le module (fichier *.bas) et l'inserer dans votre projet vba</li>
+</ul>
+
+<h2>
+<a id="code" class="anchor" href="#code" aria-hidden="true"><span class="octicon octicon-link"></span></a>Code</h2>
+
+<div class="highlight highlight-bash"><pre><span class="pl-s"><span class="pl-pds">'</span>!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</span>
+<span class="pl-s"><span class="pl-pds">'</span></span><span class="pl-k">!!!</span>TITRE <span class="pl-c1">:</span> Génération d<span class="pl-s"><span class="pl-pds">'</span>email avec Outlook                                                         !!!</span>
+<span class="pl-s"><span class="pl-pds">'</span></span><span class="pl-k">!!!</span>DATE <span class="pl-c1">:</span> 17.04.2015                                                                               <span class="pl-k">!!!</span>
+<span class="pl-s"><span class="pl-pds">'</span>!!!                                                                                                !!!</span>
+<span class="pl-s"><span class="pl-pds">'</span></span><span class="pl-k">!!!</span>DESCRIPTION <span class="pl-c1">:</span> Macro pour générer un email avec outlook en 3 partie, un texte, un tableau et un    <span class="pl-k">!!!</span>
+<span class="pl-s"><span class="pl-pds">'</span>!!!texte                                                                                           !!!</span>
+<span class="pl-s"><span class="pl-pds">'</span></span><span class="pl-k">!!!</span>                                                                                                <span class="pl-k">!!!</span>
+<span class="pl-s"><span class="pl-pds">'</span>!!!REGLES :                                                                                        !!!</span>
+<span class="pl-s"><span class="pl-pds">'</span></span><span class="pl-k">!!!</span>- intro, tableau et signature sont des tableaux de valeurs, avec une valeur par retour à ligne  <span class="pl-k">!!!</span>
+<span class="pl-s"><span class="pl-pds">'</span>!!!- tableau représente le tableau présent dans le mail, ils feront les mêmes dimensions           !!!</span>
+<span class="pl-s"><span class="pl-pds">'</span></span><span class="pl-k">!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</span>
+
+Sub gen_email_tabl(destinataire As String, objet As String, ByRef intro, ByRef tableau, ByRef signature, titre_tableau As Boolean)
+    <span class="pl-s"><span class="pl-pds">'</span>Déclaration des variables</span>
+<span class="pl-s">        <span class="pl-pds">'</span></span>les objets
+    Dim objOL As Object, olmail As Object
+        <span class="pl-s"><span class="pl-pds">'</span>les constantes</span>
+<span class="pl-s">    Const olmailItem = 0 <span class="pl-pds">'</span></span> Outlook VBA constant olMailItem
+        <span class="pl-s"><span class="pl-pds">'</span>les string</span>
+<span class="pl-s">    Dim content_mail As String, style_bordure_tableau As String, police As String, couleur_police As String</span>
+<span class="pl-s">    Dim couleur_bordure As String, style_mail As String</span>
+<span class="pl-s">        <span class="pl-pds">'</span></span>les integer
+    Dim t As Integer, l As Integer, i As Integer, taille_police As Integer, epaisseur_bordure As Integer, marge_interieur_cellule As Integer
+
+    <span class="pl-s"><span class="pl-pds">'</span>Paramètre de personnalisation du mail</span>
+<span class="pl-s">    police = "Arial" <span class="pl-pds">'</span></span> n<span class="pl-s"><span class="pl-pds">'</span>utilisez que des polices "standard"</span>
+<span class="pl-s">    taille_police = 14 <span class="pl-pds">'</span></span>en px
+    couleur_police = <span class="pl-s"><span class="pl-pds">"</span>RGB(31,73,125)<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">'</span>couleur en RGB, entre le blanc 255,255,255 et le noir 0,0,0</span>
+<span class="pl-s">    epaisseur_bordure = 1 <span class="pl-pds">'</span></span>en px
+    couleur_bordure = <span class="pl-s"><span class="pl-pds">"</span>RGB(31,73,125)<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">'</span>couleur en RGB, entre le blanc 255,255,255 et le noir 0,0,0</span>
+<span class="pl-s">    marge_interieur_cellule = 5 <span class="pl-pds">'</span></span>en px
+
+    <span class="pl-s"><span class="pl-pds">'</span>création des styles</span>
+<span class="pl-s">    style_bordure_tableau = "style=<span class="pl-pds">'</span></span>font-family:<span class="pl-s"><span class="pl-pds">"</span> &amp; police &amp; <span class="pl-pds">"</span></span><span class="pl-k">;</span>font-size:<span class="pl-s"><span class="pl-pds">"</span> &amp; taille_police &amp; <span class="pl-pds">"</span></span>px<span class="pl-k">;</span>border:<span class="pl-s"><span class="pl-pds">"</span> &amp; epaisseur_bordure &amp; <span class="pl-pds">"</span></span>px solid <span class="pl-s"><span class="pl-pds">"</span> &amp; couleur_bordure &amp; <span class="pl-pds">"</span></span><span class="pl-k">;</span>padding:<span class="pl-s"><span class="pl-pds">"</span> &amp; marge_interieur_cellule &amp; <span class="pl-pds">"</span></span>px<span class="pl-k">;</span> color:<span class="pl-s"><span class="pl-pds">"</span> &amp; couleur_police &amp; <span class="pl-pds">"</span></span><span class="pl-s"><span class="pl-pds">'</span>"</span>
+<span class="pl-s">    style_mail = "style=<span class="pl-pds">'</span></span>font-family:<span class="pl-s"><span class="pl-pds">"</span> &amp; police &amp; <span class="pl-pds">"</span></span><span class="pl-k">;</span>font-size:<span class="pl-s"><span class="pl-pds">"</span> &amp; taille_police &amp; <span class="pl-pds">"</span></span>px<span class="pl-k">;</span>color:<span class="pl-s"><span class="pl-pds">"</span> &amp; couleur_police &amp; <span class="pl-pds">"</span></span><span class="pl-s"><span class="pl-pds">'</span>"</span>
+<span class="pl-s"></span>
+<span class="pl-s">    <span class="pl-pds">'</span></span>init du contenu html du mail
+    content_mail = <span class="pl-s"><span class="pl-pds">"</span>&lt;body <span class="pl-pds">"</span></span> <span class="pl-k">&amp;</span> style_mail <span class="pl-k">&amp;</span> <span class="pl-s"><span class="pl-pds">"</span>&gt;<span class="pl-pds">"</span></span>
+    content_mail = content_mail <span class="pl-k">&amp;</span> <span class="pl-s"><span class="pl-pds">"</span>&lt;p&gt;<span class="pl-pds">"</span></span>
+
+    <span class="pl-s"><span class="pl-pds">'</span>ajout du texte d<span class="pl-pds">'</span></span>intro du mail
+    For i = 0 To UBound(intro)
+        content_mail = content_mail <span class="pl-k">&amp;</span> intro(i) <span class="pl-k">&amp;</span> <span class="pl-s"><span class="pl-pds">"</span>&lt;br/&gt;<span class="pl-pds">"</span></span>
+    Next i
+
+    <span class="pl-s"><span class="pl-pds">'</span>init du tableau</span>
+<span class="pl-s">    content_mail = content_mail &amp; "&lt;table style=<span class="pl-pds">'</span></span>border-collapse:collapse<span class="pl-s"><span class="pl-pds">'</span>&gt;"</span>
+<span class="pl-s"></span>
+<span class="pl-s">    <span class="pl-pds">'</span></span>ajout des titres du tableau si existant dans la variable
+    If titre_tableau = True Then
+        content_mail = content_mail <span class="pl-k">&amp;</span> <span class="pl-s"><span class="pl-pds">"</span>&lt;tr&gt;<span class="pl-pds">"</span></span>
+        For i = 0 To UBound(tableau, 2)
+            content_mail = content_mail <span class="pl-k">&amp;</span> <span class="pl-s"><span class="pl-pds">"</span>&lt;th <span class="pl-pds">"</span></span> <span class="pl-k">&amp;</span> style_bordure_tableau <span class="pl-k">&amp;</span> <span class="pl-s"><span class="pl-pds">"</span>&gt;<span class="pl-pds">"</span></span> <span class="pl-k">&amp;</span> tableau(0, i) <span class="pl-k">&amp;</span> <span class="pl-s"><span class="pl-pds">"</span>&lt;/th&gt;<span class="pl-pds">"</span></span>
+        Next i
+        content_mail = content_mail <span class="pl-k">&amp;</span> <span class="pl-s"><span class="pl-pds">"</span>&lt;/tr&gt;<span class="pl-pds">"</span></span>
+        t = 1 <span class="pl-s"><span class="pl-pds">'</span>permet de savoir à quelle ligne du tableau commencer, 1 s<span class="pl-pds">'</span></span>il y a des titres sinon 0
+    Else
+        t = 0
+    End If
+
+    <span class="pl-s"><span class="pl-pds">'</span>ajout du reste du tableau</span>
+<span class="pl-s">    For l = t To UBound(tableau, 1)</span>
+<span class="pl-s">        content_mail = content_mail &amp; "&lt;tr&gt;"</span>
+<span class="pl-s">        For i = 0 To UBound(tableau, 2)</span>
+<span class="pl-s">            content_mail = content_mail &amp; "&lt;td " &amp; style_bordure_tableau &amp; "&gt;" &amp; tableau(l, i) &amp; "&lt;/td&gt;"</span>
+<span class="pl-s">        Next i</span>
+<span class="pl-s">        content_mail = content_mail &amp; "&lt;/tr&gt;"</span>
+<span class="pl-s">    Next l</span>
+<span class="pl-s"></span>
+<span class="pl-s">    <span class="pl-pds">'</span></span>fermeture du tableau
+    content_mail = content_mail <span class="pl-k">&amp;</span> <span class="pl-s"><span class="pl-pds">"</span>&lt;/table&gt;<span class="pl-pds">"</span></span>
+
+    <span class="pl-s"><span class="pl-pds">'</span>ajout de la signature</span>
+<span class="pl-s">    For i = 0 To UBound(signature)</span>
+<span class="pl-s">        content_mail = content_mail &amp; signature(i) &amp; "&lt;br/&gt;"</span>
+<span class="pl-s">    Next i</span>
+<span class="pl-s"></span>
+<span class="pl-s">    <span class="pl-pds">'</span></span>fermeture du contenu du mail
+    content_mail = content_mail <span class="pl-k">&amp;</span> <span class="pl-s"><span class="pl-pds">"</span>&lt;/p&gt;&lt;/body&gt;<span class="pl-pds">"</span></span>
+
+    <span class="pl-s"><span class="pl-pds">'</span>création du mail</span>
+<span class="pl-s">    Set objOL = CreateObject("Outlook.Application")</span>
+<span class="pl-s">    Set olmail = objOL.CreateItem(olmailItem)</span>
+<span class="pl-s">    With olmail</span>
+<span class="pl-s">        .To = destinataire</span>
+<span class="pl-s">        .Subject = objet</span>
+<span class="pl-s">        .HTMLBody = content_mail</span>
+<span class="pl-s">        .Display</span>
+<span class="pl-s">    End With</span>
+<span class="pl-s"></span>
+<span class="pl-s">End Sub</span></pre></div>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Vba gen email maintained by <a href="https://github.com/CustomOffice">CustomOffice</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
